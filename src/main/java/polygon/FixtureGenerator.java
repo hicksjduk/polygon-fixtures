@@ -1,5 +1,6 @@
 package polygon;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -11,9 +12,9 @@ public class FixtureGenerator<T>
     public static void main(String[] args)
     {
         FixtureGenerator
-                .newGenerator(5)
+                .newGenerator(10)
                 .generate()
-                .map(Round::toString)
+                .map(Object::toString)
                 .map("%s\n"::formatted)
                 .forEach(System.out::println);
     }
@@ -27,6 +28,17 @@ public class FixtureGenerator<T>
     public static <T> FixtureGenerator<T> newGenerator(Stream<T> teams)
     {
         return new FixtureGenerator<>(teams);
+    }
+
+    public static <T> FixtureGenerator<T> newGenerator(Collection<T> teams)
+    {
+        return new FixtureGenerator<>(teams.stream());
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> FixtureGenerator<T> newGenerator(T... teams)
+    {
+        return new FixtureGenerator<>(Stream.of(teams));
     }
 
     private final List<T> teams;
@@ -50,7 +62,7 @@ public class FixtureGenerator<T>
     {
         return (round, flip) ->
         {
-            var extraMatch = match(otherTeam, round.bye, flip);
+            var extraMatch = Match.match(otherTeam, round.bye, flip);
             var matches = Stream.concat(round.matches, Stream.of(extraMatch));
             return new Round<>(matches, null);
         };
@@ -77,11 +89,11 @@ public class FixtureGenerator<T>
         var fromStart = teams.stream();
         var fromEnd = reverseStream(teams.subList(0, count - 1));
         var flip = alternatingBooleans().limit(count / 2);
-        var matches = zipWith(this::match, fromStart, fromEnd, flip);
+        var matches = zipWith(Match::match, fromStart, fromEnd, flip);
         return new Round<>(matches, bye);
     }
 
-    private Stream<Boolean> alternatingBooleans()
+    private static Stream<Boolean> alternatingBooleans()
     {
         return Stream.iterate(false, v -> !v);
     }
@@ -92,6 +104,7 @@ public class FixtureGenerator<T>
         return as.takeWhile(a -> bi.hasNext()).map(a -> f.apply(a, bi.next()));
     }
 
+    @FunctionalInterface
     public static interface TriFunction<A, B, C, R>
     {
         R apply(A a, B b, C c);
@@ -114,22 +127,24 @@ public class FixtureGenerator<T>
 
     public static record Round<T> (Stream<Match<T>> matches, T bye)
     {
+        @Override
         public String toString()
         {
             return Stream
-                    .concat(matches.map(Match::toString),
+                    .concat(matches.map(Object::toString),
                             bye == null ? Stream.empty() : Stream.of("Bye: %s".formatted(bye)))
                     .collect(Collectors.joining("\n"));
         }
     }
 
-    public Match<T> match(T t1, T t2, boolean flip)
-    {
-        return flip ? new Match<>(t2, t1) : new Match<>(t1, t2);
-    }
-
     public static record Match<T> (T home, T away)
     {
+        public static <T> Match<T> match(T t1, T t2, boolean flip)
+        {
+            return flip ? new Match<>(t2, t1) : new Match<>(t1, t2);
+        }
+
+        @Override
         public String toString()
         {
             return "%s v %s".formatted(home, away);
