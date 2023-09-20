@@ -16,7 +16,6 @@ public class FixtureGenerator<T>
                 .teamCount(6)
                 .games(2)
                 .generate()
-                .map(Object::toString)
                 .peek(System.out::println)
                 .forEach(r -> System.out.println());
     }
