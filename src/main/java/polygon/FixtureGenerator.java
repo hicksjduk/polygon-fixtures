@@ -88,8 +88,8 @@ public class FixtureGenerator<T>
         var bye = teams.get(count - 1);
         var fromStart = teams.stream();
         var fromEnd = reverseStream(teams.subList(0, count - 1));
-        var flip = alternatingBooleans().limit(count / 2);
-        var matches = zipWith(Match::match, fromStart, fromEnd, flip);
+        var flip = alternatingBooleans();
+        var matches = zipWith(Match::match, fromStart, fromEnd, flip).limit(count / 2);
         return new Round<>(matches, bye);
     }
 
