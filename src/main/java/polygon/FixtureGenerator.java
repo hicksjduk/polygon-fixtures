@@ -54,8 +54,9 @@ public class FixtureGenerator<T>
         if (count % 2 == 1)
             return generateFromOdd(teams);
         var otherTeam = teams.get(count - 1);
-        return zipWith(roundWithExtraMatch(otherTeam), generateFromOdd(teams.subList(0, count - 1)),
-                alternatingBooleans());
+        var rounds = generateFromOdd(teams.subList(0, count - 1));
+        var flip = alternatingBooleans();
+        return zipWith(roundWithExtraMatch(otherTeam), rounds, flip);
     }
 
     private BiFunction<Round<T>, Boolean, Round<T>> roundWithExtraMatch(T otherTeam)
