@@ -36,18 +36,18 @@ public class FixtureGenerator<T>
             return new Builder<>(generateNames(teams), games);
         }
 
-        public Builder<T> teams(Stream<T> teams)
+        public <U> Builder<U> teams(Stream<U> teams)
         {
             return new Builder<>(teams, games);
         }
 
-        public Builder<T> teams(Collection<T> teams)
+        public <U> Builder<U> teams(Collection<U> teams)
         {
             return new Builder<>(teams.stream(), games);
         }
 
         @SuppressWarnings("unchecked")
-        public Builder<T> teams(T... teams)
+        public <U> Builder<U> teams(U... teams)
         {
             return new Builder<>(Stream.of(teams), games);
         }
