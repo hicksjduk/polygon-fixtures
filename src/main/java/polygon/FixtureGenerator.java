@@ -110,7 +110,9 @@ public class FixtureGenerator<T>
 
     public Stream<Round<T>> generate()
     {
-        return generateRounds().limit(games * teams.size());
+        var count = teams.size();
+        var fullScheduleLength = count - 1 + count % 2;
+        return generateRounds().limit(games * fullScheduleLength);
     }
 
     private Stream<Round<T>> generateRounds()
