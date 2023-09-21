@@ -110,17 +110,17 @@ public class FixtureGenerator<T>
 
     public Stream<Round<T>> generate()
     {
-        return alternatingBooleans(false).flatMap(this::generate).limit(games * teams.size());
+        return generateRounds().limit(games * teams.size());
     }
 
-    private Stream<Round<T>> generate(boolean baseFlip)
+    private Stream<Round<T>> generateRounds()
     {
         var count = teams.size();
         if (count % 2 == 1)
-            return generateFromOdd(teams, baseFlip);
+            return generateFromOdd(teams);
         var otherTeam = teams.get(count - 1);
-        var rounds = generateFromOdd(teams.subList(0, count - 1), baseFlip);
-        var flip = alternatingBooleans(baseFlip);
+        var rounds = generateFromOdd(teams.subList(0, count - 1));
+        var flip = alternatingBooleans(false);
         return zipWith(roundWithExtraMatch(otherTeam), rounds, flip);
     }
 
@@ -134,10 +134,11 @@ public class FixtureGenerator<T>
         };
     }
 
-    private Stream<Round<T>> generateFromOdd(List<T> teams, boolean baseFlip)
+    private Stream<Round<T>> generateFromOdd(List<T> teams)
     {
-        var polygons = Stream.iterate(teams, this::rotate).limit(teams.size());
-        return polygons.map(generator(baseFlip));
+        var polygons = Stream.iterate(teams, this::rotate);
+        return zipWith((polygon, baseFlip) -> generator(baseFlip).apply(polygon), polygons,
+                alternatingBooleans(false));
     }
 
     private List<T> rotate(List<T> list)
