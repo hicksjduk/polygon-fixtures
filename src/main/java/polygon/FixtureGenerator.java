@@ -1,6 +1,7 @@
 package polygon;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -139,30 +140,26 @@ public class FixtureGenerator<T>
     private Stream<Round<T>> generateFromOdd(List<T> teams)
     {
         var polygons = Stream.iterate(teams, this::rotate);
-        return zipWith((polygon, baseFlip) -> generator(baseFlip).apply(polygon), polygons,
-                alternatingBooleans(false));
+        var flip = alternatingBooleans(false);
+        return zipWith(this::generateRound, polygons, flip);
     }
 
     private List<T> rotate(List<T> list)
     {
-        var count = list.size();
-        var str1 = Stream.of(list.get(count - 1));
-        var str2 = list.subList(0, count - 1).stream();
-        return Stream.concat(str1, str2).toList();
+        var answer = new LinkedList<>(list);
+        answer.addFirst(answer.removeLast());
+        return answer;
     }
 
-    private Function<List<T>, Round<T>> generator(boolean baseFlip)
+    private Round<T> generateRound(List<T> teams, boolean baseFlip)
     {
-        return teams ->
-        {
-            var count = teams.size();
-            var bye = teams.get(count - 1);
-            var fromStart = teams.stream();
-            var fromEnd = reverseStream(teams.subList(0, count - 1));
-            var flip = alternatingBooleans(baseFlip);
-            var matches = zipWith(Match::match, fromStart, fromEnd, flip).limit(count / 2);
-            return new Round<>(matches, bye);
-        };
+        var count = teams.size();
+        var bye = teams.get(count - 1);
+        var fromStart = teams.stream();
+        var fromEnd = reverseStream(teams.subList(0, count - 1));
+        var flip = alternatingBooleans(baseFlip);
+        var matches = zipWith(Match::match, fromStart, fromEnd, flip).limit(count / 2);
+        return new Round<>(matches, bye);
     }
 
     private static Stream<Boolean> alternatingBooleans(boolean first)
