@@ -12,28 +12,28 @@ public class FixtureGenerator<T>
 {
     public static void main(String[] args)
     {
-        FixtureGenerator.teamCount(4).games(2).generate().forEach(System.out::println);
+        FixtureGenerator.teamCount(10).games(1).generate().forEach(System.out::println);
     }
 
     public static Builder<String> teamCount(int teams)
     {
-        return new Builder<>(generateNames(teams), 1);
+        return new Builder<>(generateNames(teams), null);
     }
 
     public static <T> Builder<T> teams(Stream<T> teams)
     {
-        return new Builder<>(teams, 1);
+        return new Builder<>(teams, null);
     }
 
     public static <T> Builder<T> teams(Collection<T> teams)
     {
-        return new Builder<>(teams.stream(), 1);
+        return new Builder<>(teams.stream(), null);
     }
 
     @SuppressWarnings("unchecked")
     public static <T> Builder<T> teams(T... teams)
     {
-        return new Builder<>(Stream.of(teams), 1);
+        return new Builder<>(Stream.of(teams), null);
     }
 
     public static Builder<Void> games(int games)
@@ -44,9 +44,9 @@ public class FixtureGenerator<T>
     public static class Builder<T>
     {
         private final Stream<T> teams;
-        private final int games;
+        private final Integer games;
 
-        private Builder(Stream<T> teams, int games)
+        private Builder(Stream<T> teams, Integer games)
         {
             this.teams = teams;
             this.games = games;
@@ -110,11 +110,11 @@ public class FixtureGenerator<T>
     }
 
     private final List<T> teams;
-    private final int games;
+    private final Integer games;
     final int roundsPerPhase;
     final int matchesPerRound;
 
-    private FixtureGenerator(Stream<T> teams, int games)
+    private FixtureGenerator(Stream<T> teams, Integer games)
     {
         this.teams = teams.toList();
         this.games = games;
@@ -130,16 +130,14 @@ public class FixtureGenerator<T>
 
     public Stream<Match<T>> generate()
     {
-        var schedule = generatePhase();
-        if (games == 1)
-            return schedule;
-        var sched = schedule.toList();
-        var reverse = reverse(sched);
-        return Stream
-                .generate(() -> Stream.of(sched, reverse))
-                .flatMap(Function.identity())
-                .limit(games)
-                .flatMap(Collection::stream);
+        var schedule = generatePhase().toList();
+        var reverse = reverse(schedule);
+        var phases = Stream
+                .generate(() -> Stream.of(schedule, reverse))
+                .flatMap(Function.identity());
+        if (games != null)
+            phases = phases.limit(games);
+        return phases.flatMap(Collection::stream);
     }
 
     private List<Match<T>> reverse(List<Match<T>> schedule)
