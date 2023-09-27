@@ -3,9 +3,6 @@ package polygon;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.*;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -16,8 +13,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import polygon.FixtureGenerator.Match;
-
 class FixtureGeneratorTest
 {
     @ParameterizedTest
@@ -25,38 +20,29 @@ class FixtureGeneratorTest
     void testFixtureGenerator(int teams, int games)
     {
         var teamList = IntStream.rangeClosed(1, teams).boxed().toList();
-        var fixtures = FixtureGenerator.teams(teamList).games(games).generate().toList();
-        testRounds(teamList, games, fixtures);
-    }
-
-    <T> void testRounds(List<T> teams, int games, List<Match<T>> matches)
-    {
-        var teamCount = teams.size();
+        var matches = FixtureGenerator.teams(teamList).games(games).generate().toList();
+        var teamCount = teamList.size();
         var matchCount = matches.size();
         var roundCount = games * (teamCount - 1 + teamCount % 2);
         var matchesPerRound = (teamCount - teamCount % 2) / 2;
         assertThat(matchCount).isEqualTo(roundCount * matchesPerRound);
-        var rounds = IntStream
+        var opponentsByRound = IntStream
                 .iterate(0, i -> i < matchCount, i -> i + matchesPerRound)
                 .mapToObj(i -> matches.subList(i, i + matchesPerRound))
-                .toList();
-        var opponentsPerRound = rounds
-                .stream()
                 .map(r -> r
                         .stream()
                         .flatMap(m -> Stream
                                 .of(Pair.of(m::home, m::away), Pair.of(m::away, m::home)))
                         .collect(Collectors.toMap(Pair::first, Pair::second)))
                 .toList();
-        teams.forEach(t ->
+        teamList.forEach(t ->
         {
-            assertThat(opponentsPerRound.stream().filter(r -> !r.containsKey(t)).count())
+            assertThat(opponentsByRound.stream().filter(r -> !r.containsKey(t)).count())
                     .isEqualTo(games * (teamCount % 2));
-            assertThat(opponentsPerRound
+            assertThat(opponentsByRound
                     .stream()
-                    .map(r -> r.get(t))
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+                    .filter(r -> r.containsKey(t))
+                    .collect(Collectors.groupingBy(r -> r.get(t), Collectors.counting()))
                     .values()).allMatch(c -> c == games);
             var homeAway = matches
                     .stream()
@@ -67,7 +53,7 @@ class FixtureGeneratorTest
                     .isLessThanOrEqualTo(games);
             assertThat(Pattern.compile("H").matcher(homeAway).results().count())
                     .isCloseTo(Pattern.compile("A").matcher(homeAway).results().count(),
-                            byLessThan(games * ((teamCount - 1) % 2) + 1L));
+                            byLessThan(teamCount % 2 == 0 ? 2L : 1L));
         });
     }
 
