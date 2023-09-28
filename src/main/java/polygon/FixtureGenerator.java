@@ -3,6 +3,7 @@ package polygon;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -130,6 +131,8 @@ public class FixtureGenerator<T>
 
     public Stream<Match<T>> generate()
     {
+        if (Objects.equals(games, 1))
+            return generatePhase();
         var schedule = generatePhase().toList();
         var reverse = reverse(schedule);
         var phases = Stream
