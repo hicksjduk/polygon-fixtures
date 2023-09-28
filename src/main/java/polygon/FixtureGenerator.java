@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -138,9 +139,11 @@ public class FixtureGenerator<T>
         var phases = Stream
                 .generate(() -> Stream.of(schedule, reverse))
                 .flatMap(Function.identity());
-        if (games != null)
-            phases = phases.limit(games);
-        return phases.flatMap(Collection::stream);
+        return Optional
+                .ofNullable(games)
+                .map(phases::limit)
+                .orElse(phases)
+                .flatMap(Collection::stream);
     }
 
     private List<Match<T>> reverse(List<Match<T>> schedule)
