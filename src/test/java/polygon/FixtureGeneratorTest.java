@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -68,5 +69,11 @@ class FixtureGeneratorTest
     static Stream<Arguments> testFixtureGenerator()
     {
         return Stream.of(arguments(10, 1), arguments(9, 1), arguments(4, 3));
+    }
+    
+    @Test
+    void testInfiniteSchedule() {
+        var sched = FixtureGenerator.teamCount(15).generate().limit(500);
+        assertThat(sched.toList().size()).isEqualTo(500);
     }
 }
